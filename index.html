@@ -7,63 +7,70 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3498db">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        body { font-family: -apple-system, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; font-size: 1.5rem; }
-        .plan-selector { display: flex; gap: 10px; margin-bottom: 25px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; background: #ecf0f1; color: #7f8c8d; font-weight: bold; transition: 0.3s; }
+        h1 { text-align: center; color: #2c3e50; font-size: 1.4rem; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 20px; }
+        .plan-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; background: #ecf0f1; font-weight: bold; }
         button.active { background: #3498db; color: white; }
-        .exercise-item { margin-bottom: 20px; }
-        .exercise-item label { display: block; font-size: 0.9rem; font-weight: 700; color: #34495e; margin-bottom: 8px; }
-        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; font-size: 1rem; appearance: none; }
-        .pair-group { display: flex; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
-        .pair-group .exercise-item { flex: 1; margin-bottom: 0; }
+        .instruction-box { background: #e8f4fd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; color: #2980b9; line-height: 1.4; }
+        .exercise-item { margin-bottom: 15px; }
+        label { display: block; font-size: 0.9rem; font-weight: bold; color: #34495e; margin-bottom: 5px; }
+        .reps-tag { font-size: 0.75rem; color: #e67e22; font-weight: normal; margin-left: 5px; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
+        .pair-group { display: flex; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #3498db; }
+        .cardio-footer { margin-top: 25px; padding: 15px; background: #27ae60; color: white; text-align: center; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🏋️ 健身計畫助手</h1>
+    <p class="subtitle">1 ➔ 2a+2b ➔ 3a+3b (各 3 組)</p>
     
     <div class="plan-selector">
         <button onclick="renderPlan('A')" id="btnA">計畫 A</button>
         <button onclick="renderPlan('B')" id="btnB">計畫 B</button>
     </div>
 
+    <div class="instruction-box">
+        💡 提示：每個區段（1、2、3）皆完成 3 組，每組次數為 10-12 下。
+    </div>
+
     <div id="planDisplay"></div>
+
+    <div class="cardio-footer">
+        🏃‍♂️ 訓練結束後別忘了做有氧！
+    </div>
 </div>
 
 <script>
-    // 註冊 Service Worker (PWA 的關鍵)
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker 註冊成功'))
-                .catch(err => console.log('註冊失敗', err));
-        });
+        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
     }
 
-    // 健身資料與邏輯
+    // 更新後的動作選項
     const exercises = {
-        "核心": ["棒式", "死蟲式", "側撐體"],
-        "腿後肌跟臀肌": ["羅馬尼亞硬舉", "橋式", "機械腿後勾"],
-        "上背肌": ["滑輪下拉", "槓鈴划船", "坐姿划船"],
-        "股四頭": ["深蹲", "腿部伸展機", "分腿蹲"],
-        "胸肌": ["臥推", "啞鈴飛鳥", "俯臥撐"],
-        "背闊": ["引體向上", "寬握下拉", "直臂下壓"],
-        "肩膀": ["肩推", "側平舉", "臉拉"]
+        "核心": ["前平板式", "側平板式", "爬山式"],
+        "腿後肌與臀肌": ["單腳啞鈴直膝硬舉", "單腳抬臀", "啞鈴登階"],
+        "上背肌": ["啞鈴划船", "彈力繩划船"],
+        "股四頭": ["啞鈴深蹲", "高腳杯深蹲"],
+        "胸肌": ["伏地挺身", "啞鈴推舉"],
+        "背闊肌": ["引體向上", "滑輪下拉", "直臂下拉"],
+        "肩膀": ["肩推", "側平舉", "30度肩膀平舉和聳肩"]
     };
 
     const plans = {
         "A": [
             { label: "1. 核心", type: "核心" },
-            { isPair: true, a: { label: "2a. 腿後肌跟臀肌", type: "腿後肌跟臀肌" }, b: { label: "2b. 上背肌", type: "上背肌" } },
+            { isPair: true, a: { label: "2a. 腿後肌與臀肌", type: "腿後肌與臀肌" }, b: { label: "2b. 上背肌", type: "上背肌" } },
             { isPair: true, a: { label: "3a. 股四頭", type: "股四頭" }, b: { label: "3b. 胸肌", type: "胸肌" } }
         ],
         "B": [
             { label: "1. 核心", type: "核心" },
-            { isPair: true, a: { label: "2a. 股四頭", type: "股四頭" }, b: { label: "2b. 背闊", type: "背闊" } },
-            { isPair: true, a: { label: "3a. 腿後肌跟臀肌", type: "腿後肌跟臀肌" }, b: { label: "3b. 肩膀", type: "肩膀" } }
+            { isPair: true, a: { label: "2a. 股四頭", type: "股四頭" }, b: { label: "2b. 背闊肌", type: "背闊肌" } },
+            { isPair: true, a: { label: "3a. 腿後肌與臀肌", type: "腿後肌與臀肌" }, b: { label: "3b. 肩膀", type: "肩膀" } }
         ]
     };
 
@@ -78,14 +85,23 @@
                 const group = document.createElement('div');
                 group.className = 'pair-group';
                 group.innerHTML = `
-                    <div class="exercise-item"><label>${item.a.label}</label><select>${generateOptions(item.a.type)}</select></div>
-                    <div class="exercise-item"><label>${item.b.label}</label><select>${generateOptions(item.b.type)}</select></div>
+                    <div style="flex:1" class="exercise-item">
+                        <label>${item.a.label}<span class="reps-tag">(10-12下)</span></label>
+                        <select>${generateOptions(item.a.type)}</select>
+                    </div>
+                    <div style="flex:1" class="exercise-item">
+                        <label>${item.b.label}<span class="reps-tag">(10-12下)</span></label>
+                        <select>${generateOptions(item.b.type)}</select>
+                    </div>
                 `;
                 display.appendChild(group);
             } else {
                 const div = document.createElement('div');
                 div.className = 'exercise-item';
-                div.innerHTML = `<label>${item.label}</label><select>${generateOptions(item.type)}</select>`;
+                div.innerHTML = `
+                    <label>${item.label}<span class="reps-tag">(10-12下)</span></label>
+                    <select>${generateOptions(item.type)}</select>
+                `;
                 display.appendChild(div);
             }
         });
@@ -99,4 +115,3 @@
 </script>
 </body>
 </html>
-
