@@ -14,11 +14,11 @@
         .plan-selector { display: flex; gap: 10px; margin-bottom: 20px; }
         button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; background: #ecf0f1; font-weight: bold; }
         button.active { background: #3498db; color: white; }
-        .instruction-box { background: #e8f4fd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; color: #2980b9; line-height: 1.4; }
+        .instruction-box { background: #fff3cd; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; color: #856404; line-height: 1.5; border-left: 5px solid #ffc107; }
         .exercise-item { margin-bottom: 15px; }
         label { display: block; font-size: 0.9rem; font-weight: bold; color: #34495e; margin-bottom: 5px; }
-        .reps-tag { font-size: 0.75rem; color: #e67e22; font-weight: normal; margin-left: 5px; }
-        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
+        .reps-tag { font-size: 0.75rem; color: #e67e22; font-weight: bold; margin-left: 5px; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; background-color: #fff; }
         .pair-group { display: flex; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #3498db; }
         .cardio-footer { margin-top: 25px; padding: 15px; background: #27ae60; color: white; text-align: center; border-radius: 10px; font-weight: bold; }
     </style>
@@ -27,7 +27,7 @@
 
 <div class="container">
     <h1>🏋️ 健身計畫助手</h1>
-    <p class="subtitle">1 ➔ 2a+2b ➔ 3a+3b (各 3 組)</p>
+    <p class="subtitle">訓練流程：1 ➔ 2a+2b ➔ 3a+3b</p>
     
     <div class="plan-selector">
         <button onclick="renderPlan('A')" id="btnA">計畫 A</button>
@@ -35,13 +35,16 @@
     </div>
 
     <div class="instruction-box">
-        💡 提示：每個區段（1、2、3）皆完成 3 組，每組次數為 10-12 下。
+        🎯 <b>訓練重點：</b><br>
+        1. 每個區間皆完成 <b>3 組</b>。<br>
+        2. 核心動作維持 <b>30-60 秒</b>，其餘動作 <b>10-12 下</b>。<br>
+        3. <b>每個動作間休息 1 分鐘</b>。
     </div>
 
     <div id="planDisplay"></div>
 
     <div class="cardio-footer">
-        🏃‍♂️ 訓練結束後別忘了做有氧！
+        🏃‍♂️ 重訓結束後，請進行有氧運動！
     </div>
 </div>
 
@@ -50,7 +53,6 @@
         navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
     }
 
-    // 更新後的動作選項
     const exercises = {
         "核心": ["前平板式", "側平板式", "爬山式"],
         "腿後肌與臀肌": ["單腳啞鈴直膝硬舉", "單腳抬臀", "啞鈴登階"],
@@ -84,13 +86,18 @@
             if (item.isPair) {
                 const group = document.createElement('div');
                 group.className = 'pair-group';
+                
+                // 判斷 a 與 b 的單位
+                const unitA = item.a.type === "核心" ? "30-60秒" : "10-12下";
+                const unitB = item.b.type === "核心" ? "30-60秒" : "10-12下";
+
                 group.innerHTML = `
                     <div style="flex:1" class="exercise-item">
-                        <label>${item.a.label}<span class="reps-tag">(10-12下)</span></label>
+                        <label>${item.a.label}<span class="reps-tag">(${unitA})</span></label>
                         <select>${generateOptions(item.a.type)}</select>
                     </div>
                     <div style="flex:1" class="exercise-item">
-                        <label>${item.b.label}<span class="reps-tag">(10-12下)</span></label>
+                        <label>${item.b.label}<span class="reps-tag">(${unitB})</span></label>
                         <select>${generateOptions(item.b.type)}</select>
                     </div>
                 `;
@@ -98,8 +105,10 @@
             } else {
                 const div = document.createElement('div');
                 div.className = 'exercise-item';
+                const unit = item.type === "核心" ? "30-60秒" : "10-12下";
+                
                 div.innerHTML = `
-                    <label>${item.label}<span class="reps-tag">(10-12下)</span></label>
+                    <label>${item.label}<span class="reps-tag">(${unit})</span></label>
                     <select>${generateOptions(item.type)}</select>
                 `;
                 display.appendChild(div);
